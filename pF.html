@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Mario Game Workshop</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: #00A5F9; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="800" height="400"></canvas>
+
+<script>
+
+	var canvas = document.getElementById("myCanvas");
+	var ctx = canvas.getContext("2d");
+
+// Variables MAN
+	var manHeight = 60; // Hauteur du man
+	var manWidth = 20; // Epaisseur du man
+	var posXMan = 50; //position lateral par rapport au coin gauche sup
+	var posYMan = 310; //position hauteur par rapport au coin gauche sup
+	var moveX = 50;
+	var moveY = canvas.height-90; // positionnement du bonhomme sur le sol au départ 
+	<!-- var jumpHeigt = 10; -->
+	var gravity = 2;
+	
+// Variables Terrain
+	var groundHeight = 30; //Hauteur du sol marron et ligne verte
+	var x = canvas.width/2; // Milieu de l ecran
+	var y = canvas.height-30;
+	var cloudMove = 1 // vitesse de mouvement des nuages
+	var brickRowCount = 2; // nombre de lignes de briques
+	var brickColumnCount = 4; // nombre de colonnes de briques
+	var brickWidth = 50; //largeur des briques
+	var brickHeight = 50; // hauteur des brique
+	var brickPadding = 5; // espace entre les briques
+	var brickOffsetTop = canvas.height/2-(brickHeight*brickRowCount/2); // positionnement hauteur des briques
+	var brickOffsetLeft = canvas.width/2-(brickWidth*brickColumnCount/2); // positionnement largeur des briques
+	var rightPressed = false;
+	var leftPressed = false;
+	var upPressed = false;
+	var downPressed = false;
+
+	
+	
+<!-- Dessine les briques en colonnes et lignes -->
+	var bricks = [];
+	
+	for(var c=0; c<brickColumnCount; c++) {
+		bricks[c] = [];
+		for(var r=0; r<brickRowCount; r++) {
+        bricks[c][r] = { x: 0, y: 0, status: 1 };
+		}
+	}
+
+<!-- Definition des alertes du touches enfoncées -->
+
+	document.addEventListener("keydown", keyDownHandler, false);
+	document.addEventListener("keyup", keyUpHandler, false);
+	
+function keyDownHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = true;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = true;
+    }
+	else if(e.key == "Up" || e.key == "ArrowUp") {
+        upPressed = true;
+    }
+	else if(e.key == "Down" || e.key == "ArrowDown") {
+        downPressed = true;
+    }
+}
+
+function keyUpHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = false;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = false;
+    }
+	else if(e.key == "Up" || e.key == "ArrowUp") {
+        upPressed = false;
+    }
+	else if(e.key == "Down" || e.key == "ArrowDown") {
+        downPressed = false;
+    }
+}
+
+<!-- Contole la disparition des brique en cas de contact -->
+function collisionDetection() {
+    for(var c=0; c<brickColumnCount; c++) {
+        for(var r=0; r<brickRowCount; r++) {
+            var b = bricks[c][r];
+            if(b.status == 1) {
+                if(posXMan > b.x && posXMan < b.x+brickWidth && posYMan > b.y && posYMan < b.y+brickHeight) {
+                   
+                    b.status = 0;
+                }	
+            }
+        }
+    }
+}
+
+		
+// Créé le sol (sans dessiner)
+	function drawGround() {
+    ctx.beginPath();
+	ctx.rect(0, canvas.height-groundHeight, canvas.width, groundHeight);
+    ctx.fillStyle = "#7C5547";
+    ctx.fill();
+	ctx.closePath();
+    ctx.beginPath();
+	ctx.rect(0, 370, canvas.width, 5);
+    ctx.fillStyle = "#00FF44";	
+    ctx.fill();
+    ctx.closePath();
+	}
+	
+	
+// Créé le bonhomme (sans dessiner)
+	function drawMan() {    
+	ctx.beginPath();
+    ctx.rect(posXMan, posYMan, manWidth, manHeight);
+    ctx.fillStyle = "#FF5500";
+    ctx.fill();
+    ctx.closePath();
+	}
+
+<!-- Cree les nuages	sans les dessiner -->
+	function drawCloud() {
+	ctx.beginPath();
+	ctx.arc(100+cloudMove, 100, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(120+cloudMove, 100, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(140+cloudMove, 100, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.closePath();
+	 
+	ctx.beginPath();
+	ctx.arc(300+cloudMove, 100, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(320+cloudMove, 100, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(340+cloudMove, 100, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(310+cloudMove, 80, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(330+cloudMove, 80, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.closePath();
+	
+	ctx.beginPath();
+	ctx.arc(600+cloudMove, 130, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(620+cloudMove, 130, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(640+cloudMove, 130, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.closePath();
+	
+	ctx.beginPath();
+	ctx.arc(800+cloudMove, 150, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(820+cloudMove, 150, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+	ctx.arc(840+cloudMove, 150, 20, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.closePath()
+	
+	cloudMove --;
+	
+	if (cloudMove<-900) {cloudMove=canvas.width};
+	}
+
+<!-- Créé les briques sans les dessiner -->
+	function drawBricks() {
+		for(var c=0; c<brickColumnCount; c++) {
+			for(var r=0; r<brickRowCount; r++) {
+				if(bricks[c][r].status == 1) {
+				var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+				var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+				bricks[c][r].x = brickX;
+				bricks[c][r].y = brickY;
+				ctx.beginPath();
+				ctx.rect(brickX, brickY, brickWidth, brickHeight);
+				ctx.fillStyle = "#FFFF00";
+				ctx.fill();
+				ctx.closePath();
+				}
+			}
+		}
+	}
+	
+	
+<!-- Dessine les objets  -->
+	function draw() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawGround();
+	drawCloud();
+	drawBricks();
+	drawMan();
+	collisionDetection();
+	
+<!-- Controle les mouvements -->
+		if(rightPressed&& moveX < canvas.width-manWidth) {
+			moveX += 7;
+		}
+		else if(leftPressed && moveX > 0) {
+			moveX -= 7;
+		}
+		else if(upPressed&& moveY > 0) {
+			if (moveY >309) {
+				moveY -=70;}
+			else {moveY +=70};
+		  }
+		else if(downPressed&& moveY < canvas.height-manHeight-groundHeight) {
+		   moveY += 70;
+		}
+	
+	posXMan = moveX;
+    posYMan = moveY;
+	}
+	
+	setInterval(draw, 15);
+	
+</script>
+
+</body>
+</html>
